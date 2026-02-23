@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="StarGazer">
+  <meta name="theme-color" content="#0a0e27">
+  <title>StarGazer — When to Look Up</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Loading Screen -->
+    <div id="loading" class="screen active">
+      <div class="loading-content">
+        <div class="star-pulse">✦</div>
+        <h1>StarGazer</h1>
+        <p>Finding the best time to look up...</p>
+        <div class="loader"></div>
+      </div>
+    </div>
+
+    <!-- Main Screen -->
+    <div id="main" class="screen">
+      <!-- Header -->
+      <header>
+        <div class="header-top">
+          <h1>✦ StarGazer</h1>
+          <button id="refreshBtn" class="icon-btn" aria-label="Refresh">⟳</button>
+        </div>
+        <div class="location" id="locationText">📍 Detecting location...</div>
+        <div class="updated" id="updatedText"></div>
+      </header>
+
+      <!-- Tonight's Rating -->
+      <section class="card tonight-card" id="tonightCard">
+        <div class="tonight-header">
+          <h2>Tonight</h2>
+          <div class="rating-badge" id="ratingBadge">—</div>
+        </div>
+        <div class="rating-label" id="ratingLabel">Calculating...</div>
+        <div class="tonight-details" id="tonightDetails"></div>
+      </section>
+
+      <!-- Best Window -->
+      <section class="card best-window" id="bestWindow">
+        <h2>🎯 Best Viewing Window</h2>
+        <div class="window-time" id="windowTime">—</div>
+        <div class="window-reason" id="windowReason"></div>
+      </section>
+
+      <!-- Current Conditions -->
+      <section class="card conditions-card">
+        <h2>Current Conditions</h2>
+        <div class="conditions-grid" id="conditionsGrid"></div>
+      </section>
+
+      <!-- Moon Phase -->
+      <section class="card moon-card" id="moonCard">
+        <div class="moon-visual" id="moonVisual"></div>
+        <div class="moon-info" id="moonInfo"></div>
+      </section>
+
+      <!-- Hourly Forecast -->
+      <section class="card forecast-card">
+        <h2>Tonight — Hour by Hour</h2>
+        <div class="hourly-scroll" id="hourlyForecast"></div>
+      </section>
+
+      <!-- 7-Day Outlook -->
+      <section class="card outlook-card">
+        <h2>7-Day Stargazing Outlook</h2>
+        <div class="outlook-list" id="outlookList"></div>
+      </section>
+
+      <!-- Tips -->
+      <section class="card tips-card">
+        <h2>💡 Tips</h2>
+        <ul class="tips-list">
+          <li>Let your eyes adjust to darkness for 20-30 minutes</li>
+          <li>Face away from city lights — look north or south</li>
+          <li>Clear skies + new moon = best conditions</li>
+          <li>Winter nights are longer and often clearer</li>
+          <li>Check for aurora alerts during solar storms</li>
+        </ul>
+      </section>
+
+      <!-- Footer -->
+      <footer>
+        <p>Data: Open-Meteo API (free, no key needed)</p>
+        <p>Built by TARS for Vignesh 🤖</p>
+      </footer>
+    </div>
+
+    <!-- Error Screen -->
+    <div id="error" class="screen">
+      <div class="error-content">
+        <div class="error-icon">🌧</div>
+        <h2 id="errorTitle">Something went wrong</h2>
+        <p id="errorMsg">Could not fetch weather data.</p>
+        <button id="retryBtn" class="primary-btn">Try Again</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/astronomy.js"></script>
+  <script src="js/weather.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
