@@ -29,13 +29,27 @@
   async function getLocation() {
     return new Promise((resolve) => {
       if (!navigator.geolocation) {
+        console.log('Geolocation not available, using default (Kitchener)');
         resolve({ lat: DEFAULT_LAT, lon: DEFAULT_LON });
         return;
       }
 
+      // Safety timeout in case geolocation hangs
+      const fallbackTimer = setTimeout(() => {
+        console.log('Geolocation timed out, using default (Kitchener)');
+        resolve({ lat: DEFAULT_LAT, lon: DEFAULT_LON });
+      }, 10000);
+
       navigator.geolocation.getCurrentPosition(
-        (pos) => resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude }),
-        () => resolve({ lat: DEFAULT_LAT, lon: DEFAULT_LON }),
+        (pos) => {
+          clearTimeout(fallbackTimer);
+          resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude });
+        },
+        (err) => {
+          clearTimeout(fallbackTimer);
+          console.log('Geolocation denied/failed:', err.message, '— using default (Kitchener)');
+          resolve({ lat: DEFAULT_LAT, lon: DEFAULT_LON });
+        },
         { timeout: 8000, enableHighAccuracy: false }
       );
     });
@@ -329,7 +343,44 @@
 
     } catch (err) {
       console.error('StarGazer error:', err);
-      showError('Failed to load', err.message || 'Could not fetch weather data. Check your connection.');
+      // Retry once with default location if first attempt fails
+      try {
+        console.log('Retrying with default location...');
+        lat = DEFAULT_LAT;
+        lon = DEFAULT_LON;
+        const [forecast2, cityName2] = await Promise.all([
+          Weather.fetchForecast(lat, lon),
+          Promise.resolve('Kitchener'),
+        ]);
+        locationName = cityName2;
+        $('locationText').textContent = `📍 ${locationName} (default)`;
+        $('updatedText').textContent = `Updated: ${new Date().toLocaleTimeString()}`;
+        const hours = Weather.parseHourly(forecast2);
+        const days = Weather.parseDaily(forecast2);
+        const moon = Astronomy.getMoonPhase(new Date());
+        const now = new Date();
+        const sunTimes = Astronomy.getSunTimes(now, lat, lon);
+        const currentIdx = hours.findIndex(h => h.time > now) - 1;
+        const currentHour = hours[Math.max(0, currentIdx)];
+        const todayIdx = days.findIndex(d => d.date.toDateString() === now.toDateString());
+        const tonight = days[todayIdx] || days[0];
+        const tomorrowSunrise = days[todayIdx + 1] ? days[todayIdx + 1].sunrise : new Date(now.getTime() + 86400000);
+        const nightHours = hours.filter(h => h.time >= tonight.sunset && h.time <= tomorrowSunrise);
+        nightHours.forEach(h => {
+          h.score = Astronomy.scoreHour({ cloudCover: h.cloudCover, humidity: h.humidity, visibility: h.visibility, windSpeed: h.windSpeed, isNight: true, moonIllumination: moon.illumination });
+        });
+        const tonightScore = nightHours.length ? Math.round(nightHours.reduce((s, h) => s + h.score, 0) / nightHours.length) : 0;
+        renderTonight(tonightScore, { ...sunTimes, ...tonight }, moon, currentHour);
+        renderBestWindow(nightHours);
+        renderConditions(currentHour, moon);
+        renderMoon(moon);
+        renderHourly(nightHours, moon);
+        renderOutlook(hours, days, moon);
+        showScreen('main');
+      } catch (err2) {
+        console.error('StarGazer retry also failed:', err2);
+        showError('Failed to load', err.message || 'Could not fetch weather data. Check your connection.');
+      }
     }
   }
 
